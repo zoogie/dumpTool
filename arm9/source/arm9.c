@@ -88,9 +88,10 @@ int dumpNAND(nocash_footer_t *footer){
 	FILE *f = fopen("nand.bin", "wb");
 	if(!f) death("Could not open nand file");
 	
-	iprintf("Dumping...                     \n");
+	iprintf("Dumping...\n");
 	iprintf("Hold A & B to cancel\n");
-	iprintf("Progress: 0%%    \r");
+	iprintf("\x1b[16;0H");
+	iprintf("Progress: 0%%\n");
 	swiSHA1Init(&ctx);
 
 	for(int i=0;i<rwTotal;i+=CHUNKSIZE){           //read from nand, dump to sd
@@ -109,7 +110,8 @@ int dumpNAND(nocash_footer_t *footer){
 			fail=1;
 			break;
 		}
-		iprintf("Progress: %lu%%    \r", (i+CHUNKSIZE)/(rwTotal/100));
+		iprintf("\x1b[16;0H");
+		iprintf("Progress: %lu%%\n", (i+CHUNKSIZE)/(rwTotal/100));
 		scanKeys();
 		int keys = keysHeld();
 		if(keys & KEY_A && keys & KEY_B){
@@ -174,7 +176,8 @@ int restoreNAND(nocash_footer_t *footer){
 
 	iprintf("Restoring...                   \n");
 	iprintf("Do not turn off the power.\n");
-	iprintf("Progress: 0%%                  Sectors written: 0\r");
+	iprintf("\x1b[16;0H");
+	iprintf("Progress: 0%%\nSectors written: 0\n");
 
 	int i2=0;
 	for(int i=0;i<rwTotal;i+=0x200){           //read nand dump from sd, compare sectors, and write to nand
@@ -199,7 +202,8 @@ int restoreNAND(nocash_footer_t *footer){
 			}
 			sectorsWritten++;
 		}
-		iprintf("Progress: %lu%%                  Sectors written: %i\r", (i+0x200)/(rwTotal/100), sectorsWritten);
+		iprintf("\x1b[16;0H");
+		iprintf("Progress: %lu%%\nSectors written: %i\n", (i+0x200)/(rwTotal/100), sectorsWritten);
 		i2++;
 	}
 
