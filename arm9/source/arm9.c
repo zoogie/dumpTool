@@ -155,11 +155,22 @@ int restoreNAND(nocash_footer_t *footer){
 		wait(60); //don't spam getbatterylevel too much
 	}
 
-	char *filename="nand.bin";
 	int fail=0;
+	bool nandWritten = false;
 
 	FILE *f = fopen("nand.bin", "rb");
 	if(!f) death("Could not open nand file");
+
+	fseek(f, (rwTotal==0xF580000 ? 0xF580000 : 0xF000000)+0x10, SEEK_SET);
+
+	u8 CID[16];
+	u8 consoleID[8];
+	fread(&CID, 1, 16, f);
+	fread(&consoleID, 1, 8, f);
+
+	if((memcmp(footer->nand_cid, &CID, 16) != 0) || (memcmp(footer->consoleid, &consoleID, 8) != 0)) death("Footer does not match");
+
+	fseek(f, 0, SEEK_SET);
 
 	iprintf("Restoring...                   \n");
 	iprintf("Do not turn off the power.\n");
@@ -185,6 +196,7 @@ int restoreNAND(nocash_footer_t *footer){
 				fail=1;
 				break;
 			}
+			nandWritten = true;
 		}
 		iprintf("Progress: %lu%%    \r", (i+0x200)/(rwTotal/100));
 	}
@@ -194,7 +206,7 @@ int restoreNAND(nocash_footer_t *footer){
 		fclose(f);
 	}
 
-	iprintf("\nDone.\nPress START to exit");
+	iprintf(nandWritten ? "\nDone. Sectors we're written.\nPress START to exit" : "\nDone. No sectors we're written.\nPress START to exit");
 	done=1;
 
 	return fail;
