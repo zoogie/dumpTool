@@ -152,6 +152,35 @@ int dumpNAND(nocash_footer_t *footer){
 int restoreNAND(nocash_footer_t *footer){
 	consoleClear();
 
+	printf("\x1B[41mWARNING!\x1B[47m Even with the safety\n");
+	printf("measures taken here, writing to\n");
+	printf("NAND is very dangerous and most\n");
+	printf("issues are not helped by\n");
+	printf("restoring a NAND backup.\n\n");
+	printf("Only continue if you're certain\n");
+	printf("this will fix your problem.\n\n");
+	printf("Press X + Y to begin restore\n");
+	printf("Press B to cancel\n");
+
+	u16 held = 0;
+	while(1) {
+		do {
+			swiWaitForVBlank();
+			scanKeys();
+			held = keysHeld();
+		} while(!(held & (KEY_X | KEY_Y | KEY_B)));
+
+		if((held & (KEY_X | KEY_Y)) == (KEY_X | KEY_Y)) {
+			consoleClear();
+			break;
+		} else if(held & KEY_B) {
+			consoleClear();
+			iprintf("Press Y to begin NAND restore\n");
+			iprintf("Press A to begin NAND dump\nPress START to exit\n\n");
+			return -1;
+		}
+	}
+
 	u32 rwTotal=nand_GetSize()*0x200; //240MB or 245.5MB
 	printf("NAND size: %.2fMB\n", (float)rwTotal/(float)0x100000);
 
