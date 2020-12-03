@@ -1,8 +1,9 @@
 Directions:
-Just boot the dumpTool.nds app and press A.
+Just boot SafeNANDManager and press A.
 It will dump a nand.bin with nocash footer to your dsi at 
 DT010203040A0B0C0D/nand.bin
 The folder will be next to wherever you put dumpTool.nds. And obviously, your foldername will have different characters. It's console-unique.
+You can also restore a different but still console-unique nand.bin
 
 General Info:
 This tool should create a nand.bin identical to fwTool.nds 2.0. The same holds true for its nand.bin.sha1 file as well.
@@ -13,11 +14,12 @@ Features:
 - Completely open source.
 - Lots of checks, including verifying the nocash footer will decrypt the outputed NAND. Low battery and insufficient SD space are also checked.
 - Project has a permissive license, and more importantly, its dev is permissive. I don't care what's done with this post-release as long as credit is given.
-- Simple operation. Just press A and watch it go.
+- Simple operation. Just press A to dump, or Y to restore, and watch it go.
 - You can cancel the dump in progress. The incomplete nand will be cleaned up.
-- A little bit faster than fwTool. Should complete in about 7 minutes.
+- A little bit faster than fwTool. Should complete in about 7 minutes. NAND restore may take longer.
 
 Thanks:
+zoogie - Original dumpTool app
 Martin Korth (nocash) - Documenting the consoleID dumping method on GBAtek.
 Tinivi - Borrowed his 3ds mode (arm9) aes function from https://github.com/TiniVi/AHPCFW/
 WulfyStylez - Loosely followed his method for nocash footer verification in twlTool:
