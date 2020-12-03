@@ -1,0 +1,12 @@
+-W3
+#bitmap mode
+-gb
+
+# disable alpha and set opaque bit for all pixels
+-gT!
+
+# use lz77 compression
+-gzl
+
+# Set the bit depth to 8
+-gB8

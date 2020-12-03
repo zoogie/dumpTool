@@ -244,6 +244,9 @@ int verifyNocashFooter(nocash_footer_t *footer){
 }
 
 int main(void) {
+	extern void dsiOnly(void);
+	dsiOnly();
+
 	consoleDemoInit();
 	iprintf("SafeNANDManager v1.0\n");
 	iprintf("by Rocket Robz\n");
