@@ -248,8 +248,8 @@ int main(void) {
 	dsiOnly();
 
 	consoleDemoInit();
-	iprintf("SafeNANDManager v1.0\n");
-	iprintf("by Rocket Robz\n");
+	iprintf("SafeNANDManager v1.0 by\n");
+	iprintf("Rocket Robz (dumpTool by zoogie)\n");
 
 	workbuffer=(u8*)malloc(CHUNKSIZE);
 	if(!workbuffer) death("Could not allocate workbuffer");  
