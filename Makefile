@@ -13,9 +13,9 @@ export TOPDIR	:=	$(CURDIR)
 NITRO_FILES	:=
 
 # These set the information text in the nds file
-GAME_TITLE     := dumpTool
-GAME_SUBTITLE1 := zoogie
-GAME_SUBTITLE2 := Dump DSi NAND w/ nocash footer
+GAME_TITLE     := SafeNANDManager
+GAME_SUBTITLE1 := Dump or Restore DSi NAND
+GAME_SUBTITLE2 := zoogie & Rocket Robz
 
 include $(DEVKITARM)/ds_rules
 

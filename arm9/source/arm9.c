@@ -71,7 +71,7 @@ int dumpNAND(nocash_footer_t *footer){
 	u32 rwTotal=nand_GetSize()*0x200; //240MB or 245.5MB
 	printf("NAND size: %.2fMB\n", (float)rwTotal/(float)0x100000);
 	
-	if(rwTotal != 0xF000000 && rwTotal != 0xF580000) death("Unknown NAND size. Please\ncontact zoogie at:\nhttps://github.com/zoogie/dumpTool/issues"); //there's no documented nand chip with sizes different from these two.
+	if(rwTotal != 0xF000000 && rwTotal != 0xF580000) death("Unknown NAND size."); //there's no documented nand chip with sizes different from these two.
 	
 	while(getBatteryLevel() < 0x4){
 		iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
@@ -143,6 +143,63 @@ int dumpNAND(nocash_footer_t *footer){
 	return fail;
 }
 
+int restoreNAND(nocash_footer_t *footer){
+
+	u32 rwTotal=nand_GetSize()*0x200; //240MB or 245.5MB
+	printf("NAND size: %.2fMB\n", (float)rwTotal/(float)0x100000);
+
+	if(rwTotal != 0xF000000 && rwTotal != 0xF580000) death("Unknown NAND size."); //there's no documented nand chip with sizes different from these two.
+
+	while(getBatteryLevel() < 0x4){
+		iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
+		wait(60); //don't spam getbatterylevel too much
+	}
+
+	char *filename="nand.bin";
+	int fail=0;
+
+	FILE *f = fopen("nand.bin", "rb");
+	if(!f) death("Could not open nand file");
+
+	iprintf("Restoring...                   \n");
+	iprintf("Do not turn off the power.\n");
+	iprintf("Progress: 0%%    \r");
+
+	for(int i=0;i<rwTotal;i+=0x200){           //read nand dump from sd, compare sectors, and write to nand
+		if(nand_ReadSectors(i / 0x200, 1, workbuffer) == false){
+			iprintf("Nand read error\nOffset: %08X\nAborting...", (int)i);
+			fclose(f);
+			fail=1;
+			break;
+		}
+		if(fread(workbuffer+0x200, 1, 0x200, f) < 0x200){
+			iprintf("Sdmc read error\nOffset: %08X\nAborting...", (int)i);
+			fclose(f);
+			fail=1;
+			break;
+		}
+		if(memcmp(workbuffer, workbuffer+0x200, 0x200) != 0){
+			if(nand_WriteSectors(i / 0x200, 1, workbuffer+0x200) == false){
+				iprintf("Nand write error\nOffset: %08X\nAborting...", (int)i);
+				fclose(f);
+				fail=1;
+				break;
+			}
+		}
+		iprintf("Progress: %lu%%    \r", (i+0x200)/(rwTotal/100));
+	}
+
+	if(!fail) 
+	{
+		fclose(f);
+	}
+
+	iprintf("\nDone.\nPress START to exit");
+	done=1;
+
+	return fail;
+}
+
 int verifyNocashFooter(nocash_footer_t *footer){
 	u8 out[0x200]={0};
 	u8 sha1[20]={0};
@@ -176,10 +233,11 @@ int verifyNocashFooter(nocash_footer_t *footer){
 
 int main(void) {
 	consoleDemoInit();
-	iprintf("dumpTool v1.0 - zoogie\n");
-	
+	iprintf("SafeNANDManager v1.0\n");
+	iprintf("by Rocket Robz\n");
+
 	workbuffer=(u8*)malloc(CHUNKSIZE);
-	if(!workbuffer) death("Could not allocate workbuffer");    
+	if(!workbuffer) death("Could not allocate workbuffer");  
 	nocash_footer_t nocash_footer;
 	u8 CID[16];
 	u8 consoleID[8];
@@ -191,30 +249,37 @@ int main(void) {
 	memcpy(nocash_footer.footerID, "DSi eMMC CID/CPU", 16);
 	memcpy(nocash_footer.nand_cid, CID, 16);
 	memcpy(nocash_footer.consoleid, consoleID, 8);
-	
+
 	if(!fatInitDefault() || !nand_Startup()) death("MMC init problem - dying...");
 	wait(1); //was having a race condition issue with nand_startup and nand_readsectors, so this might help
-	
+
 	if(getMBremaining() < 250) death("SD space remaining < 250MBs");
 	if(nand_GetSize()*0x200 > 600*0x100000) death("This isn't a DSi!"); //I'll give you a kidney if there's unmodified DSi out there with a 600MB NAND.
-	
+
 	snprintf(dirname, 32, "DT%016llX", *(u64*)CID); //that 'certain other tool' uses MAC for console-unique ID, while this one uses part of the nand CID. either is fine but I don't want to overwrite the other app's dump.
 	mkdir(dirname, 0777);
 	chdir(dirname);
-	
+
+	bool nandFound = (access("nand.bin", F_OK) == 0);
+
 	iprintf("Verifying nocash_footer: ");
 	iprintf("%s\n", verifyNocashFooter(&nocash_footer) ? "GOOD":"BAD\nThis dump can't be decrypted\nwith this footer!");
 	iprintf("\n");
+	if (nandFound) {
+		iprintf("Press Y to begin NAND restore\n");
+	}
 	iprintf("Press A to begin NAND dump\nPress START to exit\n\n");
-	
+
 	while(1) {
 
 		swiWaitForVBlank();
 		scanKeys();
-		if      (keysDown() & KEY_A && !done) dumpNAND(&nocash_footer);
+		if      ((keysDown() & KEY_Y) && nandFound && !done) restoreNAND(&nocash_footer);
+		if      ((keysDown() & KEY_A) && !done) dumpNAND(&nocash_footer);
 		else if (keysDown() & KEY_START) break;
 	}
-	
+
 	free(workbuffer);
+
 	return 0;
 }
