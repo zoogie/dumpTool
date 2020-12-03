@@ -67,15 +67,19 @@ void getConsoleID(u8 *consoleID){
 }
 
 int dumpNAND(nocash_footer_t *footer){
+	consoleClear();
 
 	u32 rwTotal=nand_GetSize()*0x200; //240MB or 245.5MB
 	printf("NAND size: %.2fMB\n", (float)rwTotal/(float)0x100000);
 	
 	if(rwTotal != 0xF000000 && rwTotal != 0xF580000) death("Unknown NAND size."); //there's no documented nand chip with sizes different from these two.
 	
+	bool batteryMsgShown=false;
 	while(getBatteryLevel() < 0x4){
-		iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
-		wait(60); //don't spam getbatterylevel too much
+		if(!batteryMsgShown) {
+			iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
+			batteryMsgShown=true;
+		}
 	}
 	
 	char *filename="nand.bin";
@@ -146,15 +150,19 @@ int dumpNAND(nocash_footer_t *footer){
 }
 
 int restoreNAND(nocash_footer_t *footer){
+	consoleClear();
 
 	u32 rwTotal=nand_GetSize()*0x200; //240MB or 245.5MB
 	printf("NAND size: %.2fMB\n", (float)rwTotal/(float)0x100000);
 
 	if(rwTotal != 0xF000000 && rwTotal != 0xF580000) death("Unknown NAND size."); //there's no documented nand chip with sizes different from these two.
 
+	bool batteryMsgShown=false;
 	while(getBatteryLevel() < 0x4){
-		iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
-		wait(60); //don't spam getbatterylevel too much
+		if(!batteryMsgShown) {
+			iprintf("Battery low: plug in to proceed\r"); //user can charge to 2 bars or more OR just plug in the charger. charging state adds +0x80 to battery level. low 4 bits are the battery charge level.
+			batteryMsgShown=true;
+		}
 	}
 
 	int fail=0;
