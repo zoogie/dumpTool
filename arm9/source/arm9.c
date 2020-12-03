@@ -174,8 +174,9 @@ int restoreNAND(nocash_footer_t *footer){
 
 	fseek(f, 0, SEEK_SET);
 
-	iprintf("Restoring...                   \n");
-	iprintf("Do not turn off the power.\n");
+	iprintf("Restoring...\n");
+	iprintf("Do not turn off the power,\n");
+	iprintf("or remove the SD card.\n");
 	iprintf("\x1b[16;0H");
 	iprintf("Progress: 0%%\nSectors written: 0\n");
 
