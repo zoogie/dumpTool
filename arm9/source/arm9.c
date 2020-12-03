@@ -156,7 +156,7 @@ int restoreNAND(nocash_footer_t *footer){
 	}
 
 	int fail=0;
-	bool nandWritten = false;
+	int sectorsWritten=0;
 
 	FILE *f = fopen("nand.bin", "rb");
 	if(!f) death("Could not open nand file");
@@ -174,10 +174,11 @@ int restoreNAND(nocash_footer_t *footer){
 
 	iprintf("Restoring...                   \n");
 	iprintf("Do not turn off the power.\n");
-	iprintf("Progress: 0%%    \r");
+	iprintf("Progress: 0%%                  Sectors written: 0\r");
 
+	int i2=0;
 	for(int i=0;i<rwTotal;i+=0x200){           //read nand dump from sd, compare sectors, and write to nand
-		if(nand_ReadSectors(i / 0x200, 1, workbuffer) == false){
+		if(nand_ReadSectors(i2, 1, workbuffer) == false){
 			iprintf("Nand read error\nOffset: %08X\nAborting...", (int)i);
 			fclose(f);
 			fail=1;
@@ -190,15 +191,16 @@ int restoreNAND(nocash_footer_t *footer){
 			break;
 		}
 		if(memcmp(workbuffer, workbuffer+0x200, 0x200) != 0){
-			if(nand_WriteSectors(i / 0x200, 1, workbuffer+0x200) == false){
+			if(nand_WriteSectors(i2, 1, workbuffer+0x200) == false){
 				iprintf("Nand write error\nOffset: %08X\nAborting...", (int)i);
 				fclose(f);
 				fail=1;
 				break;
 			}
-			nandWritten = true;
+			sectorsWritten++;
 		}
-		iprintf("Progress: %lu%%    \r", (i+0x200)/(rwTotal/100));
+		iprintf("Progress: %lu%%                  Sectors written: %i\r", (i+0x200)/(rwTotal/100), sectorsWritten);
+		i2++;
 	}
 
 	if(!fail) 
@@ -206,7 +208,7 @@ int restoreNAND(nocash_footer_t *footer){
 		fclose(f);
 	}
 
-	iprintf(nandWritten ? "\nDone. Sectors we're written.\nPress START to exit" : "\nDone. No sectors we're written.\nPress START to exit");
+	iprintf("\nDone.\nPress START to exit");
 	done=1;
 
 	return fail;
