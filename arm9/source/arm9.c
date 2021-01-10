@@ -322,8 +322,15 @@ int main(void) {
 	bool nandFound = (access("nand.bin", F_OK) == 0);
 
 	iprintf("Verifying nocash_footer: ");
-	iprintf("%s\n", verifyNocashFooter(&nocash_footer) ? "GOOD":"BAD\nThis dump can't be decrypted\nwith this footer!");
-	iprintf("\n");
+	bool isNocashFooterGood = verifyNocashFooter(&nocash_footer);
+	iprintf("%s\n", isNocashFooterGood ? "\033[32mGOOD\033[39m":"\033[31mBAD\033[39m\nThis dump can't be decrypted\nwith this footer!\n\033[33mThis can occur if this tool is\nran through HiyaCFW (SDNAND),\nwhich isn't supported.\nPlease run it on SysNAND instead(DSiWare exploit or Unlaunch)."); //The color value not being reset in the "BAD" string is intended. "instead(DSiWare" because it reached the end of the line 
+	iprintf("\nConsoleID:\n");
+	for (int i = 7; i > -1; i--) iprintf("%02X", consoleID[i]);
+	iprintf("\n\nCID: \n");
+	for (int i = 0; i < 16; i++) iprintf("%02X", CID[i]);
+	if (!isNocashFooterGood) iprintf("\033[31m^ At least one of these is wrong"); //the CID value fills a whole line, no \n is needed at the beginning
+	iprintf("\n\n\033[39m");
+	
 	if (nandFound) {
 		iprintf("Press Y to begin NAND restore\n");
 	}
